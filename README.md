@@ -20,69 +20,98 @@ O desenvolvimento do backend é focado em performance, tipagem forte e escalabil
 
 - **Plataforma:** .NET 10 (ASP.NET Core)
 - **Linguagem:** C#
-- **API Gateway:** YARP (Yet Another Reverse Proxy)
-- **ORM:** Entity Framework Core
+- **ORM:** Entity Framework Core (SQL Server)
 - **Comunicação em Tempo Real:** SignalR / WebSockets (para rolagem de dados simultânea e movimentação no mapa)
-- **Arquitetura:** Monorepo de Microsserviços com Clean Architecture e Domain-Driven Design (DDD)
+- **Arquitetura:** Monolito em Camadas com Clean Architecture e Domain-Driven Design (DDD)
 - **Testes:** xUnit
 
 ---
 
 ## 🏗️ Arquitetura e Design
 
-O projeto adota uma arquitetura de **Monorepo de Microsserviços** combinada com **Clean Architecture** em cada serviço e táticas de **Domain-Driven Design (DDD)**.
+O projeto adota uma arquitetura de **Monolito em Camadas** combinada com **Clean Architecture** e blocos táticos de **Domain-Driven Design (DDD)**.
 
 ```text
 taverna-web-backend/
-├── Gateway/                     <-- Ponto de entrada do tráfego (YARP)
-│   ├── Gateway.Api/
-│   └── Gateway.sln
+├── Api/                         <-- Camada de Apresentação, Endpoints, SignalR Hubs e DI
+│   ├── Extensions/              <-- Registro de dependências e configurações de ambiente
+│   ├── Properties/              <-- Configurações de inicialização (launchSettings.json)
+│   ├── Program.cs
+│   └── Api.csproj
 │
-├── Shared/                      <-- Caixa de ferramentas compartilhada neutra
-│   ├── Shared.Common/
-│   └── Shared.sln
+├── Application/                 <-- Camada de Aplicação, Casos de Uso, DTOs e Utilitários
+│   ├── Utils/                   <-- Utilitários transversais (Hash PBKDF2/SHA256, Token JWT)
+│   └── Application.csproj
 │
-├── Ficha/                       <-- Microsserviço de Fichas e Inventários
-│   ├── Ficha.Api/ ... Ficha.Persistence/
-│   └── Ficha.sln
+├── Domain/                      <-- Camada de Domínio (Núcleo Puro, sem dependências externas)
+│   ├── Exceptions/              <-- Exceções de domínio
+│   │   └── Common/              <-- Exceções HTTP/comuns (BadRequest, Conflict, NotFound, Unauthorized)
+│   ├── Interfaces/
+│   │   └── Repository/          <-- Contratos de repositórios (ex: IUsuarioRepository)
+│   ├── Model/                   <-- Entidades de domínio (ex: Usuario)
+│   ├── ValueObject/             <-- Objetos de valor (ex: Email)
+│   └── Domain.csproj
 │
-├── Gerenciador/                 <-- Microsserviço do Mestre, Sessões e Rolagens
-│   ├── Gerenciador.Api/ ... Gerenciador.Persistence/
-│   └── Gerenciador.sln
+├── Persistence/                 <-- Camada de Persistência e Acesso a Dados (EF Core)
+│   ├── Configuration/           <-- Mapeamentos Fluent API (IEntityTypeConfiguration)
+│   ├── Context/                 <-- Contexto do banco de dados (ApplicationDbContext)
+│   ├── Migrations/              <-- Histórico de migrações do Entity Framework Core
+│   ├── Repository/              <-- Implementação concreta dos repositórios
+│   └── Persistence.csproj
 │
-├── Mapa/                        <-- Microsserviço de Grids e Tokens
-│   ├── Mapa.Api/ ... Mapa.Persistence/
-│   └── Mapa.sln
+├── Test/                        <-- Projeto centralizado de testes automatizados (xUnit)
+│   ├── Application/             <-- Testes da camada Application (Hash, Token JWT)
+│   ├── Domain/                  <-- Testes das regras de negócio e Value Objects do Domain
+│   └── Test.csproj
 │
-├── Usuario/                     <-- Microsserviço de Autenticação e Perfis
-│   ├── Usuario.Api/ ... Usuario.Persistence/
-│   └── Usuario.sln
-│
-├── Test/                        <-- Testes automatizados centralizados (xUnit)
+├── .editorconfig                <-- Padronização de estilo e formatação de código
+├── .env.example                 <-- Modelo de variáveis de ambiente
+├── AGENTS.md                    <-- Diretrizes arquiteturais e operacionais para agentes de IA
+├── Directory.Build.props        <-- Configurações globais de compilação (.NET 10)
+├── Docker-compose.yml           <-- Orquestração do banco de dados SQL Server 2022
 └── TavernaWeb.sln               <-- Solução unificada na raiz
 ```
 
+### Fluxo de Dependências (Clean Architecture):
+
+```text
+┌───────────────────┐
+│        Api        │ ──► Referencia: Application, Persistence
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│    Persistence    │ ──► Referencia: Application, Domain
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│    Application    │ ──► Referencia: Domain
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│      Domain       │ ──► Núcleo puro (zero dependências externas)
+└───────────────────┘
+```
+
 ### Pilares Arquiteturais:
-- 🌐 **Monorepo de Microsserviços:** Cada contexto de negócio (`Usuario`, `Ficha`, `Gerenciador`, `Mapa`) é um microsserviço independente com seu próprio ciclo de vida, agrupados no mesmo repositório para facilidade de versionamento.
-- 🚪 **API Gateway Centralizado (YARP):** O serviço `Gateway.Api` é o ponto único de contato para clientes externos. O frontend acessa uma única porta e o Gateway direciona as chamadas para a porta interna de cada serviço.
-- 🧰 **Shared Kernel Neutro (`Shared.Common`):** Biblioteca técnica compartilhada contendo contratos de WebSocket/SignalR, DTOs e helpers transversais. Proibido conter regras de negócio para evitar acoplamento.
-- 🥞 **Clean Architecture por Serviço:** Cada microsserviço é isolado em 4 camadas:
-  - `[Serviço].Api`: Apresentação, endpoints e injeção de dependência.
-  - `[Serviço].Application`: Casos de uso, DTOs e handlers.
-  - `[Serviço].Domain`: Entidades ricas, value objects e regras de negócio puras (sem dependência de banco).
-  - `[Serviço].Persistence`: DbContext, mapeamentos EF Core e repositórios.
-- 🎯 **Domain-Driven Design (DDD):** Regras de jogo e a linguagem ubíqua (Mestre, Ficha, Iniciativa, Dados) são isoladas no núcleo do domínio.
+- 🥞 **Clean Architecture em Camadas:** O monolito é dividido em 4 camadas principais com isolamento estrito de responsabilidades:
+  - `Api`: Ponto de entrada HTTP e WebSockets/SignalR, middlewares e composição de injeção de dependência (`Api -> Application, Persistence`).
+  - `Application`: Casos de uso, DTOs, handlers, validações e utilitários (`Application -> Domain`).
+  - `Domain`: Entidades (`Model`), objetos de valor (`ValueObject`), contratos de repositórios (`Interfaces/Repository`), exceções (`Exceptions`) e regras de negócio puras (zero dependência de banco ou frameworks externos).
+  - `Persistence`: Contexto do Entity Framework Core (`Context`), mapeamentos (`Configuration`), migrations e implementação concreta dos repositórios (`Repository`), referenciando `Application` e `Domain`.
+- 🎯 **Domain-Driven Design (DDD):** As regras de jogo e a linguagem ubíqua (Usuário, Mestre, Ficha, Iniciativa, Dados, Mapa) são isoladas no núcleo do domínio através de entidades ricas, objetos de valor e contratos bem definidos.
 - ✨ **Clean Code (Código Limpo):** Aplicação estrita dos princípios SOLID e padrões de código limpo.
 
 ---
 
-## ⚙️ Escopo dos Microsserviços
+## ⚙️ Escopo Funcional do Sistema
 
-- 🔐 **`Usuario` (Autenticação e Perfis):** Gestão de usuários, mestres e jogadores, proteção de rotas com JWT e autorização.
-- 📜 **`Ficha` (Personagens e Inventário):** Criação dinâmica, leitura e atualização de atributos, perícias, raças, classes e equipamentos.
-- 🧙‍♂️ **`Gerenciador` (Mestre, Sessões e Rolagens):** Gestão de sessões de RPG, NPCs, ordem de iniciativa de combate, motor de rolagem de dados poliédricos e integração com áudio ambiente (Spotify).
-- 🗺️ **`Mapa` (Grid Tático e Cenário):** Estado dos mapas de batalha, posicionamento e movimentação de tokens/miniaturas em tempo real e fog of war.
-- 🚪 **`Gateway` (Roteamento Reverso):** Centralização de CORS e distribuição de tráfego HTTP/WebSocket para os serviços.
+- 🔐 **Usuários (Autenticação e Perfis):** Gestão de usuários, mestres e jogadores, proteção de rotas com JWT e autorização.
+- 📜 **Fichas (Personagens e Inventário):** Criação dinâmica, leitura e atualização de atributos, perícias, raças, classes e equipamentos.
+- 🧙‍♂️ **Gerenciador (Mestre, Sessões e Rolagens):** Gestão de sessões de RPG, NPCs, ordem de iniciativa de combate, motor de rolagem de dados poliédricos e integração com áudio ambiente (Spotify).
+- 🗺️ **Mapas (Grid Tático e Cenário):** Estado dos mapas de batalha, posicionamento e movimentação de tokens/miniaturas em tempo real e fog of war.
 
 ---
 
@@ -92,7 +121,7 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento backend loca
 
 ### Pré-requisitos
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) instalado.
-- Banco de dados (SQL Server).
+- [Docker](https://docs.docker.com/get-docker/) e Docker Compose (ou instância local do SQL Server 2022).
 - (Opcional, mas recomendado) IDE de sua preferência: Visual Studio 2022, Rider ou VS Code com extensão C# Dev Kit.
 
 ### Passo a Passo
@@ -107,23 +136,33 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento backend loca
    cd taverna-web-backend
    ```
 
-3. **Restaure as dependências e compile a solução completa:**
+3. **Configure as variáveis de ambiente:**
+   Copie o arquivo `.env.example` para `.env` na raiz do projeto e preencha sua senha do banco, connection string e chave JWT:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Suba o banco de dados SQL Server via Docker:**
+   ```bash
+   docker compose -f Docker-compose.yml up -d
+   ```
+
+5. **Restaure as dependências, compile a solução e aplique as migrations:**
    ```bash
    dotnet restore
    dotnet build
+   dotnet ef database update -p Persistence -s Api
    ```
 
-4. **Execute os testes automatizados:**
+6. **Execute os testes automatizados:**
    ```bash
    dotnet test
    ```
 
-5. **Executando os Serviços:**
-   - Para rodar um serviço individual (ex: Gateway):
-     ```bash
-     dotnet run --project Gateway/Gateway.Api/Gateway.Api.csproj
-     ```
-   - Ou abra a solução específica do serviço que você deseja desenvolver (ex: `Usuario/Usuario.sln` ou `Ficha/Ficha.sln`).
+7. **Executando a API:**
+   ```bash
+   dotnet run --project Api/Api.csproj
+   ```
 
 ---
 
