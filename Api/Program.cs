@@ -2,7 +2,10 @@ using Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AdicionarDependenciasUsuario(builder.Configuration).AddEndpointsApiExplorer().AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer()
+                .AddSwaggerGen()
+                .AdicionarDependencias(builder.Configuration)
+                .InjecaoDependencias();
 
 var app = builder.Build();
 

@@ -1,13 +1,11 @@
-using Domain.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
-using Persistence.Repository;
 
 namespace Api.Extensions;
 
-public static class DependencyInjection
+public static class AdicionarDependenciasExtensions
 {
-    public static IServiceCollection AdicionarDependenciasUsuario(
+    public static IServiceCollection AdicionarDependencias(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -18,8 +16,6 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
-
-        services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
         return services;
     }
