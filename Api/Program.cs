@@ -1,4 +1,7 @@
+using Api.Bootstrap;
 using Api.Extensions;
+
+DotEnvExtensions.CarregarDotEnv();
 
 var builder = WebApplication.CreateBuilder(args);
 
