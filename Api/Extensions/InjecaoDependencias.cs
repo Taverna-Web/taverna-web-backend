@@ -2,9 +2,9 @@ using Domain.Interfaces.Repository;
 using Persistence.Repository;
 
 namespace Api.Extensions;
-public static class InjecaoDependenciasExtensions
+public static class InjecaoDependencias
 {
-    public static IServiceCollection InjecaoDependencias(this IServiceCollection services)
+    public static IServiceCollection AddInjecaoDependencias(this IServiceCollection services)
     {
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 

@@ -3,9 +3,9 @@ using Persistence.Context;
 
 namespace Api.Extensions;
 
-public static class AdicionarDependenciasExtensions
+public static class AdicionarDependencias
 {
-    public static IServiceCollection AdicionarDependencias(
+    public static IServiceCollection AddAdicionarDependencias(
         this IServiceCollection services,
         IConfiguration configuration)
     {
