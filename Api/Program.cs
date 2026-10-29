@@ -1,4 +1,5 @@
 using Api.Extensions;
+using Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,5 +16,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
+
+app.MapearDadoEndpoints();
 
 app.Run();
