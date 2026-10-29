@@ -36,16 +36,42 @@ public static class AutenticacaoSeguranca
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
+                    ValidIssuer = jwtIssuer,
                     ValidateAudience = true,
+                    ValidAudience = jwtAudience,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtIssuer,
-                    ValidAudience = jwtAudience,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
                     ClockSkew = TimeSpan.Zero
                 };
-            });
+                options.Events = new JwtBearerEvents
+                {
+                    OnChallenge = async context =>
+                    {
+                        context.HandleResponse();
 
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+
+                        string mensagemErro = context.AuthenticateFailure switch
+                        {
+                            SecurityTokenExpiredException => "O token expirou.",
+                            SecurityTokenInvalidSignatureException => "Assinatura do token inválida.",
+                            SecurityTokenInvalidIssuerException => "Emissor do token inválido.",
+                            SecurityTokenInvalidAudienceException => "Audiência do token inválida.",
+                            not null => "Falha na autenticação do token.",
+                            null => "Token de autenticação não fornecido."
+                        };
+                        var payload = new
+                        {
+                            status = StatusCodes.Status401Unauthorized,
+                            erro = "NaoAutorizado",
+                            mensagem = mensagemErro
+                        };
+                        await context.Response.WriteAsJsonAsync(payload);
+                    }
+                };
+            });
         return services;
     }
 }
