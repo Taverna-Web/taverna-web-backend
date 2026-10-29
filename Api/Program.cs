@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer()
                 .AddSwaggerGen()
+                .AddConfiguracaoBanco(builder.Configuration)
                 .AddAutenticacaoSeguranca(builder.Configuration)
                 .AddInjecaoDependencias();
 
