@@ -24,6 +24,14 @@ public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepositor
         return usuario.IdUsuario;
     }
 
+    public async Task<bool> EmailJaCadastradoRepositoryAsync(Email enderecoEmail)
+    {
+        var usuario = await _context.Usuarios
+            .AsNoTracking()
+            .AnyAsync(u => u.EnderecoEmailUsuario == enderecoEmail);
+
+        return usuario;
+    }
     public async Task AdicionarUsuarioRepositoryAsync(string NomeUsuario, string Senha, Email enderecoEmail)
     {
         var novoUsuario = new Usuario
