@@ -46,8 +46,8 @@ namespace Persistence.Migrations
 
                     b.Property<string>("SenhaUsuario")
                         .IsRequired()
-                        .HasMaxLength(70)
-                        .HasColumnType("nvarchar(70)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("IdUsuario");
 
