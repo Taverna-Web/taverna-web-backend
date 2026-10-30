@@ -1,4 +1,4 @@
-using Application.Dtos.Login.Commands;
+using Application.Dtos.Login.Command;
 using Application.Dtos.Login.Request;
 using Riok.Mapperly.Abstractions;
 
@@ -9,4 +9,3 @@ public static partial class LoginMapper
 {
     public static partial LoginCommandDto ToCommand(this LoginRequestDto request);
 }
-

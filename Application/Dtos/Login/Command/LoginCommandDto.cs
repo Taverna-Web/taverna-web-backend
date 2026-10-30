@@ -1,3 +1,3 @@
-namespace Application.Dtos.Login.Commands;
+namespace Application.Dtos.Login.Command;
 
 public record LoginCommandDto(string Email, string Senha);
