@@ -1,33 +1,40 @@
 using System;
-using System.Security.Cryptography;
+using Api.Endpoints.Dtos;
+using Api.Services;
 
 namespace Api.Endpoints;
 
 public static class DadoEndpoints
 {
+    
     public static void MapearDadoEndpoints(this IEndpointRouteBuilder app)
     {
-        var grupo = app.MapGroup("/api/taverna");
+        var grupo = app.MapGroup("/api/taverna")
+                       .WithTags("Dados");
 
-        List<int> dados = new List<int> {2, 4, 8, 10, 12, 20, 100};
 
-        grupo.MapGet("/rolar-dado", (int lados = 6) => {
+        grupo.MapGet("/dado/{lados:int}", (IDadoService dadoService, int lados) =>
+        {
+            var (sucesso, resultado, erro) = dadoService.RolarDado(lados);
 
-            bool valido = dados.Contains(lados);
-            if (!valido)
+            if (!sucesso)
             {
-                return Results.BadRequest($"Insira um dado válido para rolar. {string.Join(", ", dados)}");
+                return Results.BadRequest(new RespostaErroDto(
+                    Erro: "Dado inválido.", 
+                    Mensagem: erro ?? "Erro desconhecido."
+                ));
             }
 
-            int numeroSorteado = RandomNumberGenerator.GetInt32(1, lados + 1);
-
-            return Results.Ok(new
-            {
-                Dado = $"D{lados}",
-                Resultado = numeroSorteado,
-                Metodo = "Cryptographically Secure (RandomNumberGenerator)",
-                Mensagem = $"Você rolou um dado D{lados} e tirou {numeroSorteado}!"
-            });
-        });
+            return Results.Ok(new RespostaDadoDto(
+            
+                Dado: $"D{lados}",
+                Resultado: resultado!.Value,
+                Metodo: "Cryptographically Secure (RandomNumberGenerator)",
+                Mensagem: $"Você rolou um dado D{lados} e tirou {resultado}!"
+            ));
+        })
+        .WithName("RolarDadoPorTipo")
+        .Produces<RespostaDadoDto>(StatusCodes.Status200OK)
+        .Produces<RespostaErroDto>(StatusCodes.Status400BadRequest);
     }
 }
