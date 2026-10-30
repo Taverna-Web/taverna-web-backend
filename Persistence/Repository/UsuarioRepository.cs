@@ -7,14 +7,9 @@ using Persistence.Context;
 
 namespace Persistence.Repository;
 
-public class UsuarioRepository : IUsuarioRepository
+public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public UsuarioRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task<int> ObterIdUsuarioComEmailRepositoryAsync(Email enderecoEmail)
     {
