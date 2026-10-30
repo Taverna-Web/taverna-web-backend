@@ -1,5 +1,7 @@
 using Api.Bootstrap;
 using Api.Extensions;
+using Api.Endpoints.Login;
+using Api.Endpoints.Cadastro;
 
 DotEnvExtensions.CarregarDotEnv();
 
@@ -22,5 +24,8 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapLoginEndpoint();
+app.MapCadastroEndpoint();
 
 app.Run();
