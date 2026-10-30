@@ -72,6 +72,9 @@ public static class AutenticacaoSeguranca
                     }
                 };
             });
+
+        services.AddAuthorization();
+
         return services;
     }
 }
