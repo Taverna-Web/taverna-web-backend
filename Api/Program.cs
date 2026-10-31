@@ -25,7 +25,9 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapLoginEndpoint();
-app.MapCadastroEndpoint();
+var api = app.MapGroup("/api");
+
+api.MapLoginEndpoint();
+api.MapCadastroEndpoint();
 
 app.Run();
