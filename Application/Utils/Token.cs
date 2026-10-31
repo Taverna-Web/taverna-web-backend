@@ -9,15 +9,19 @@ public static class Token
     private const string HEADER_PADRAO_JSON = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
 
     /// <summary>
-    /// Gera um token JWT assinado com HMAC-SHA256 (HS256).
+    /// Gera um token JWT assinado com HMAC-SHA256 (HS256) incluindo emissor (iss) e audiência (aud).
     /// </summary>
     public static string GerarToken(
         int idUsuario,
         string email,
         string? chaveSecreta = null,
+        string? issuer = null,
+        string? audience = null,
         int expiracaoHoras = 24)
     {
         string segredo = ObterChaveSecreta(chaveSecreta);
+        string emissor = ObterIssuer(issuer);
+        string destinatario = ObterAudience(audience);
 
         long agoraUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         long expiracaoUnix = DateTimeOffset.UtcNow.AddHours(expiracaoHoras).ToUnixTimeSeconds();
@@ -26,6 +30,8 @@ public static class Token
         {
             ["sub"] = idUsuario.ToString(),
             ["email"] = email,
+            ["iss"] = emissor,
+            ["aud"] = destinatario,
             ["iat"] = agoraUnix,
             ["exp"] = expiracaoUnix
         };
@@ -40,9 +46,13 @@ public static class Token
     }
 
     /// <summary>
-    /// Verifica se a assinatura e a data de expiração do token JWT são válidas.
+    /// Verifica se a assinatura, expiração, emissor (iss) e audiência (aud) do token JWT são válidas.
     /// </summary>
-    public static bool ValidarToken(string token, string? chaveSecreta = null)
+    public static bool ValidarToken(
+        string token,
+        string? chaveSecreta = null,
+        string? issuer = null,
+        string? audience = null)
     {
         if (string.IsNullOrWhiteSpace(token))
             return false;
@@ -81,7 +91,28 @@ public static class Token
             long expUnix = expElement.GetInt64();
             long agoraUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            return expUnix > agoraUnix;
+            if (expUnix <= agoraUnix)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(issuer))
+            {
+                if (!doc.RootElement.TryGetProperty("iss", out JsonElement issElement) ||
+                    issElement.GetString() != issuer)
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(audience))
+            {
+                if (!doc.RootElement.TryGetProperty("aud", out JsonElement audElement) ||
+                    audElement.GetString() != audience)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
         catch
         {
@@ -100,6 +131,26 @@ public static class Token
             throw new InvalidOperationException("A chave secreta JWT não foi configurada.");
 
         return segredo;
+    }
+
+    private static string ObterIssuer(string? issuer)
+    {
+        string? emissor = !string.IsNullOrWhiteSpace(issuer)
+            ? issuer
+            : Environment.GetEnvironmentVariable("JWT_ISSUER")
+                ?? Environment.GetEnvironmentVariable("ISS");
+
+        return !string.IsNullOrWhiteSpace(emissor) ? emissor : "TavernaWebBackend";
+    }
+
+    private static string ObterAudience(string? audience)
+    {
+        string? destinatario = !string.IsNullOrWhiteSpace(audience)
+            ? audience
+            : Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                ?? Environment.GetEnvironmentVariable("AUD");
+
+        return !string.IsNullOrWhiteSpace(destinatario) ? destinatario : "TavernaWebFrontend";
     }
 
     private static string CalcularAssinaturaHmac(string dados, string segredo)

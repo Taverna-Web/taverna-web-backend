@@ -17,6 +17,23 @@ public class TokenTests
     }
 
     [Fact]
+    public void GerarToken_ComIssuerEAudience_DeveValidarCorretamente()
+    {
+        const string issuer = "TavernaBackend";
+        const string audience = "TavernaFrontend";
+
+        string jwt = Token.GerarToken(42, "mestre@taverna.com", CHAVE_TESTE, issuer: issuer, audience: audience);
+
+        bool validoComMesmoIssuerEAudience = Token.ValidarToken(jwt, CHAVE_TESTE, issuer: issuer, audience: audience);
+        bool invalidoComIssuerDiferente = Token.ValidarToken(jwt, CHAVE_TESTE, issuer: "OutroIssuer", audience: audience);
+        bool invalidoComAudienceDiferente = Token.ValidarToken(jwt, CHAVE_TESTE, issuer: issuer, audience: "OutraAudience");
+
+        Assert.True(validoComMesmoIssuerEAudience);
+        Assert.False(invalidoComIssuerDiferente);
+        Assert.False(invalidoComAudienceDiferente);
+    }
+
+    [Fact]
     public void ValidarToken_ComChaveIncorreta_DeveRetornarFalse()
     {
         string jwt = Token.GerarToken(10, "jogador@taverna.com", CHAVE_TESTE);
