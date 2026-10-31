@@ -8,7 +8,7 @@ DotEnvExtensions.CarregarDotEnv();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer()
-                .AddSwaggerGen()
+                .AddConfiguracaoSwagger()
                 .AddConfiguracaoBanco(builder.Configuration)
                 .AddAutenticacaoSeguranca(builder.Configuration)
                 .AddInjecaoDependencias();
