@@ -1,0 +1,40 @@
+name: PipeLine CI
+
+on:
+    push:
+        branches: [develop, main]
+    pull_request:
+        branches: [develop, main]
+
+jobs:
+    build-and-test:
+        runs-on: ubuntu-latest
+
+        env:
+            DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'Server=localhost,1433;Database=TavernaWebDb;User Id=sa;Password=DefinaUmaSenhaForteAqui@123;TrustServerCertificate=True;' }}
+            DB_SA_PASSWORD: ${{ secrets.DB_SA_PASSWORD || 'DefinaUmaSenhaForteAqui@123' }}
+            JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY || 'chave_secreta_padrao_para_execucao_de_testes_ci_123456789' }}
+            JWT_ISSUER: ${{ secrets.JWT_ISSUER || 'TavernaWebBackend' }}
+            JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE || 'TavernaWebFrontend' }}
+
+        steps:
+            - name: Clonar o repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar o .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: 10.0.x
+                  include-prerelease: true
+
+            - name: Configurar arquivo .env para testes
+              run: cp .env.example .env
+
+            - name: Restaurar dependências
+              run: dotnet restore
+
+            - name: Compilar a solução
+              run: dotnet build --no-restore --configuration Release
+
+            - name: Executar os testes
+              run: dotnet test --no-build --configuration Release --verbosity normal
