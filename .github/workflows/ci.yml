@@ -24,9 +24,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Verificar vazamento de senhas e segredos (Gitleaks)
-              uses: gitleaks/gitleaks-action@v2
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: docker run --rm -v ${{ github.workspace }}:/path -w /path zricethezav/gitleaks:latest detect --source="/path" --verbose
 
             - name: Configurar o .NET
               uses: actions/setup-dotnet@v4
