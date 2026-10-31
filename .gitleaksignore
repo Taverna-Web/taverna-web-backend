@@ -1,0 +1,2 @@
+# Ignora falso positivo da chave de exemplo no .env.example
+5a45f68e536c72522e8407e37a2d7d97c17900f8:.env.example:generic-api-key:3

@@ -137,3 +137,15 @@ Sempre siga a ordem de dependências das camadas: de dentro para fora (`Domain` 
   - <item 1>
   - <item 2>
   ```
+
+---
+
+## 4. Integração Contínua (CI/CD) e Varredura de Segredos
+
+O repositório possui uma esteira automatizada no **GitHub Actions** (`.github/workflows/ci.yml`) acionada em todo `push` ou `pull_request` para as branches `develop` e `main`:
+
+1. **Detecção de Segredos (Gitleaks):** Varre o histórico e o código para impedir o vazamento acidental de chaves, senhas e tokens. Falsos positivos conhecidos (como chaves de exemplo em `.env.example`) são registrados no arquivo `.gitleaksignore`.
+2. **Setup e Restauração:** Configura o ambiente `.NET 10.0.x` e restaura os pacotes NuGet.
+3. **Compilação Estrita:** Executa `dotnet build --configuration Release` garantindo zero erros de compilação.
+4. **Testes Automatizados:** Executa `dotnet test --configuration Release` assegurando 100% de aprovação na suíte de testes.
+
