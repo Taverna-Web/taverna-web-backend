@@ -5,6 +5,7 @@ namespace Domain.Interfaces.Repository;
 public interface IUsuarioRepository
 {
     Task<int> ObterIdUsuarioComEmailRepositoryAsync(Email enderecoEmail);
+    Task<bool> EmailJaCadastradoRepositoryAsync(Email enderecoEmail);
     Task<string> ObterSenhaUsuarioRepositoryAsync(int IdUsuario);
     Task<string> ObterEmailUsuarioRepositoryAsync(int IdUsuario);
     Task<string> ObterNomeUsuarioRepositoryAsync(int IdUsuario);

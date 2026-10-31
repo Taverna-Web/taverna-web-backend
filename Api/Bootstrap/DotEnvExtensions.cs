@@ -1,29 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+namespace Api.Bootstrap;
 
-namespace Api.Extensions;
-
-public static class AdicionarDependenciasExtensions
+public static class DotEnvExtensions
 {
-    public static IServiceCollection AdicionarDependencias(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static void CarregarDotEnv()
     {
-        CarregarVariaveisAmbienteDotEnv();
-
-        string? connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
-            ?? configuration.GetConnectionString("DefaultConnection");
-
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
-
-        return services;
-    }
-
-    private static void CarregarVariaveisAmbienteDotEnv()
-    {
-        string diretorioAtual = Directory.GetCurrentDirectory();
-        string? diretorioBusca = diretorioAtual;
+        string? diretorioBusca = Directory.GetCurrentDirectory();
 
         while (!string.IsNullOrEmpty(diretorioBusca))
         {

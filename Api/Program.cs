@@ -1,11 +1,17 @@
+using Api.Bootstrap;
 using Api.Extensions;
+using Api.Endpoints.Login;
+using Api.Endpoints.Cadastro;
+
+DotEnvExtensions.CarregarDotEnv();
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer()
-                .AddSwaggerGen()
-                .AdicionarDependencias(builder.Configuration)
-                .InjecaoDependencias();
+                .AddConfiguracaoSwagger()
+                .AddConfiguracaoBanco(builder.Configuration)
+                .AddAutenticacaoSeguranca(builder.Configuration)
+                .AddInjecaoDependencias();
 
 var app = builder.Build();
 
@@ -15,5 +21,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+var api = app.MapGroup("/api");
+
+api.MapLoginEndpoint();
+api.MapCadastroEndpoint();
 
 app.Run();
