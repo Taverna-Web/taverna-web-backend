@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Domain.Exceptions.Common;
 
 namespace Application.Utils;
 
@@ -90,26 +89,6 @@ public static class Token
         }
     }
 
-    /// <summary>
-    /// Valida o token JWT e extrai o IdUsuario (claim "sub"), lançando UnauthorizedException se inválido.
-    /// </summary>
-    public static int ObterIdUsuarioDoToken(string token, string? chaveSecreta = null)
-    {
-        if (!ValidarToken(token, chaveSecreta))
-            throw new UnauthorizedException("Token inválido ou expirado.");
-
-        string[] partes = token.Split('.');
-        byte[] bytesPayload = DecodificarBase64Url(partes[1]);
-        using JsonDocument doc = JsonDocument.Parse(bytesPayload);
-
-        if (doc.RootElement.TryGetProperty("sub", out JsonElement subElement) &&
-            int.TryParse(subElement.GetString(), out int idUsuario))
-        {
-            return idUsuario;
-        }
-
-        throw new UnauthorizedException("Token não contém um identificador de usuário válido.");
-    }
 
     private static string ObterChaveSecreta(string? chaveSecreta)
     {
