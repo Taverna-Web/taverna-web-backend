@@ -1,4 +1,5 @@
 using Api.Bootstrap;
+using Api.Middleware;
 using Api.Extensions;
 using Api.Endpoints.Login;
 using Api.Endpoints.Cadastro;
@@ -14,6 +15,8 @@ builder.Services.AddEndpointsApiExplorer()
                 .AddInjecaoDependencias();
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExcecaoMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
