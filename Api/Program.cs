@@ -1,4 +1,5 @@
 using Api.Bootstrap;
+using Api.Middleware;
 using Api.Extensions;
 using Api.Endpoints.Dados;
 using Application.Interfaces;
@@ -18,6 +19,8 @@ builder.Services.AddEndpointsApiExplorer()
 builder.Services.AddSingleton<IDadoService, DadoService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExcecaoMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
