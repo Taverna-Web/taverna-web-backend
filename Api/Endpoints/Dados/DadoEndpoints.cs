@@ -1,40 +1,32 @@
 using System;
 using Application.Interfaces;
 using Application.Dtos.Dados.Response;
+using Application.Dtos.Dados.Request;
 
 namespace Api.Endpoints.Dados;
 
 public static class DadoEndpoints
 {
     
-    public static void MapearDadoEndpoints(this IEndpointRouteBuilder app)
+    public static void MapRolarDadoEndpoint(this IEndpointRouteBuilder app)
     {
         var grupo = app.MapGroup("/api/taverna")
-                       .WithTags("Dados");
+                       .WithTags("Dados")
+                       .RequireAuthorization();
 
 
-        grupo.MapGet("/dado/{lados:int}", (IDadoService dadoService, int lados) =>
+        grupo.MapGet("/dado/{lados:int}", ([AsParameters] RolarDadoRequestDto request, IDadoService service) =>
         {
-            var (sucesso, resultado, erro) = dadoService.RolarDado(lados);
+            var response = service.RolarDado(request);
 
-            if (!sucesso)
-            {
-                return Results.BadRequest(new RespostaErroDto(
-                    Erro: "Dado inválido.", 
-                    Mensagem: erro ?? "Erro desconhecido."
-                ));
-            }
-
-            return Results.Ok(new RespostaDadoDto(
-            
-                Dado: $"D{lados}",
-                Resultado: resultado!.Value,
-                Metodo: "Cryptographically Secure (RandomNumberGenerator)",
-                Mensagem: $"Você rolou um dado D{lados} e tirou {resultado}!"
-            ));
+            return Results.Ok(response);
         })
         .WithName("RolarDadoPorTipo")
-        .Produces<RespostaDadoDto>(StatusCodes.Status200OK)
-        .Produces<RespostaErroDto>(StatusCodes.Status400BadRequest);
+        .WithSummary("Rola um dado com o número de lados especificado")
+        .Produces<ResponseDadoDto>(200)
+        .ProducesProblem(400)
+        .ProducesProblem(401)
+        .ProducesProblem(500);
     }
+    // adicionar endpoint de vezes consecutivas e retorna a lista de valores e a soma deles
 }

@@ -1,6 +1,6 @@
 namespace Application.Dtos.Dados.Response;
 
-public record RespostaErroDto(
+public record ResponseErroDto(
     string Erro, 
     string Mensagem
 );
