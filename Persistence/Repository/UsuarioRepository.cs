@@ -7,14 +7,9 @@ using Persistence.Context;
 
 namespace Persistence.Repository;
 
-public class UsuarioRepository : IUsuarioRepository
+public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public UsuarioRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task<int> ObterIdUsuarioComEmailRepositoryAsync(Email enderecoEmail)
     {
@@ -29,6 +24,14 @@ public class UsuarioRepository : IUsuarioRepository
         return usuario.IdUsuario;
     }
 
+    public async Task<bool> EmailJaCadastradoRepositoryAsync(Email enderecoEmail)
+    {
+        var usuario = await _context.Usuarios
+            .AsNoTracking()
+            .AnyAsync(u => u.EnderecoEmailUsuario == enderecoEmail);
+
+        return usuario;
+    }
     public async Task AdicionarUsuarioRepositoryAsync(string NomeUsuario, string Senha, Email enderecoEmail)
     {
         var novoUsuario = new Usuario

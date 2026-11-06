@@ -22,7 +22,7 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .HasMaxLength(254);
         builder.Property(u => u.SenhaUsuario)
             .IsRequired()
-            .HasMaxLength(70);
+            .HasMaxLength(255);
         builder.Property(u => u.ContaDeletada)
             .IsRequired()
             .HasDefaultValue(false);

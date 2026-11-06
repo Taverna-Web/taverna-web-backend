@@ -1,4 +1,4 @@
-namespace Api.Endpoints.Dtos;
+namespace Application.Dtos.Dados.Response;
 
 public record RespostaErroDto(
     string Erro, 

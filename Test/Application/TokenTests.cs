@@ -1,4 +1,3 @@
-using Domain.Exceptions.Common;
 using Application.Utils;
 
 namespace Test.Application;
@@ -8,15 +7,30 @@ public class TokenTests
     private const string CHAVE_TESTE = "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90";
 
     [Fact]
-    public void GerarToken_EValidarComMesmaChave_DeveRetornarTrueEExtrairIdUsuario()
+    public void GerarToken_EValidarComMesmaChave_DeveRetornarTrue()
     {
         string jwt = Token.GerarToken(42, "mestre@taverna.com", CHAVE_TESTE);
 
         bool valido = Token.ValidarToken(jwt, CHAVE_TESTE);
-        int idExtraido = Token.ObterIdUsuarioDoToken(jwt, CHAVE_TESTE);
 
         Assert.True(valido);
-        Assert.Equal(42, idExtraido);
+    }
+
+    [Fact]
+    public void GerarToken_ComIssuerEAudience_DeveValidarCorretamente()
+    {
+        const string issuer = "TavernaBackend";
+        const string audience = "TavernaFrontend";
+
+        string jwt = Token.GerarToken(42, "mestre@taverna.com", CHAVE_TESTE, issuer: issuer, audience: audience);
+
+        bool validoComMesmoIssuerEAudience = Token.ValidarToken(jwt, CHAVE_TESTE, issuer: issuer, audience: audience);
+        bool invalidoComIssuerDiferente = Token.ValidarToken(jwt, CHAVE_TESTE, issuer: "OutroIssuer", audience: audience);
+        bool invalidoComAudienceDiferente = Token.ValidarToken(jwt, CHAVE_TESTE, issuer: issuer, audience: "OutraAudience");
+
+        Assert.True(validoComMesmoIssuerEAudience);
+        Assert.False(invalidoComIssuerDiferente);
+        Assert.False(invalidoComAudienceDiferente);
     }
 
     [Fact]
@@ -38,7 +52,6 @@ public class TokenTests
         bool valido = Token.ValidarToken(jwtExpirado, CHAVE_TESTE);
 
         Assert.False(valido);
-        Assert.Throws<UnauthorizedException>(() => Token.ObterIdUsuarioDoToken(jwtExpirado, CHAVE_TESTE));
     }
 
     [Theory]

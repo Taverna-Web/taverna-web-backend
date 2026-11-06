@@ -2,7 +2,7 @@ using System;
 using System.Collections.Frozen;
 using System.Security.Cryptography;
 
-namespace Api.Services;
+namespace Application.Interfaces;
 
 public interface IDadoService
 {

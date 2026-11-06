@@ -1,6 +1,6 @@
 using System;
 
-namespace Api.Endpoints.Dtos;
+namespace Application.Dtos.Dados.Response;
 
 public record RespostaDadoDto(
     string Dado, 

@@ -1,8 +1,8 @@
 using System;
-using Api.Endpoints.Dtos;
-using Api.Services;
+using Application.Interfaces;
+using Application.Dtos.Dados.Response;
 
-namespace Api.Endpoints;
+namespace Api.Endpoints.Dados;
 
 public static class DadoEndpoints
 {
