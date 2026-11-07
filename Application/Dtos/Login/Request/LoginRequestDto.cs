@@ -5,7 +5,8 @@ namespace Application.Dtos.Login.Request;
 public record LoginRequestDto
 {
     [Required(ErrorMessage = "O e-mail é obrigatório.")]
-    [EmailAddress(ErrorMessage = "O formato do e-mail é inválido.")]
+    [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        ErrorMessage = "Formato de e-mail inválido.")]
     [StringLength(254, ErrorMessage = "O e-mail deve ter no máximo 254 caracteres.")]
     public string Email { get; init; } = string.Empty;
 

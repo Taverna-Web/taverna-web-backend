@@ -1,12 +1,10 @@
-using Domain.ValueObject;
-
 namespace Domain.Model;
 
 public class Usuario
 {
     public int IdUsuario { get; set; }
-    public string NomeUsuario { get; set; } = string.Empty;
-    public string SenhaUsuario { get; set; } = string.Empty;
-    public Email EnderecoEmailUsuario { get; set; } = null!;
+    public required string NomeUsuario { get; set; }
+    public required string SenhaUsuario { get; set; }
+    public required string EnderecoEmailUsuario { get; set; }
     public bool ContaDeletada { get; set; } = false;
 }

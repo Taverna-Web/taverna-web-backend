@@ -2,5 +2,5 @@ namespace Application.Dtos.Login.Response;
 
 public record LoginResponseDto
 {
-    public string Token { get; init; } = string.Empty;
+    public required string Token { get; init; }
 }

@@ -29,7 +29,6 @@ public static class Hash
         byte[] salt = RandomNumberGenerator.GetBytes(TAMANHO_SALT);
         byte[] hash = Rfc2898DeriveBytes.Pbkdf2(senha, salt, ITERACOES, Algoritmo, TAMANHO_HASH);
 
-        // Armazena o Salt e o Hash juntos separados por delimitador
         return $"{Convert.ToHexString(salt)}:{Convert.ToHexString(hash)}";
     }
 
