@@ -5,7 +5,6 @@ using Application.Mapper.Cadastro;
 using Application.Utils;
 using Domain.Exceptions.Common;
 using Domain.Interfaces.Repository;
-using Domain.ValueObject;
 
 namespace Application.Service;
 
@@ -15,20 +14,22 @@ public class CadastroService(IUsuarioRepository repository) : ICadastroService
 
     public async Task<CadastroResponseDto> CadastrarUsuarioAsync(CadastroRequestDto request)
     {
-        var command = CadastroMapper.ToCommand(request);
-        var email = new Email(command.Email);
 
-        if (await _repository.EmailJaCadastradoRepositoryAsync(email))
+        if (await _repository.EmailJaCadastradoRepositoryAsync(request.Email))
         {
             throw new ConflictException("O email fornecido já está cadastrado.");
         }
+        var command = CadastroMapper.ToCommand(request);
+
         var senhaHash = Hash.GerarHashSenha(command.Senha);
-        await _repository.AdicionarUsuarioRepositoryAsync(command.Nome, senhaHash, email);
+        await _repository.AdicionarUsuarioRepositoryAsync(command.Nome, senhaHash, command.Email);
 
 
         return new CadastroResponseDto
         {
-            Token = Token.GerarToken(await _repository.ObterIdUsuarioComEmailRepositoryAsync(email), email.EnderecoEmail)
+            Token = Token.GerarToken(
+                await _repository.ObterIdUsuarioComEmailRepositoryAsync(command.Email),
+                command.Email)
         };
     }
 }

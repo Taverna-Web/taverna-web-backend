@@ -1,7 +1,6 @@
 using Domain.Exceptions.Common;
 using Domain.Interfaces.Repository;
 using Domain.Model;
-using Domain.ValueObject;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 
@@ -11,7 +10,7 @@ public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepositor
 {
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<int> ObterIdUsuarioComEmailRepositoryAsync(Email enderecoEmail)
+    public async Task<int> ObterIdUsuarioComEmailRepositoryAsync(string enderecoEmail)
     {
         var usuario = await _context.Usuarios
             .AsNoTracking()
@@ -24,7 +23,7 @@ public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepositor
         return usuario.IdUsuario;
     }
 
-    public async Task<bool> EmailJaCadastradoRepositoryAsync(Email enderecoEmail)
+    public async Task<bool> EmailJaCadastradoRepositoryAsync(string enderecoEmail)
     {
         var usuario = await _context.Usuarios
             .AsNoTracking()
@@ -32,7 +31,7 @@ public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepositor
 
         return usuario;
     }
-    public async Task AdicionarUsuarioRepositoryAsync(string NomeUsuario, string Senha, Email enderecoEmail)
+    public async Task AdicionarUsuarioRepositoryAsync(string NomeUsuario, string Senha, string enderecoEmail)
     {
         var novoUsuario = new Usuario
         {
@@ -64,7 +63,7 @@ public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepositor
         {
             throw new NotFoundException("A conta associada a este usuário foi deletada.");
         }
-        return usuario.EnderecoEmailUsuario.EnderecoEmail;
+        return usuario.EnderecoEmailUsuario;
     }
 
     public async Task<string> ObterNomeUsuarioRepositoryAsync(int IdUsuario)
@@ -89,7 +88,7 @@ public class UsuarioRepository(ApplicationDbContext context) : IUsuarioRepositor
         return usuario.SenhaUsuario;
     }
 
-    public async Task RedefinirEmailUsuarioRepositoryAsync(int IdUsuario, Email enderecoEmail)
+    public async Task RedefinirEmailUsuarioRepositoryAsync(int IdUsuario, string enderecoEmail)
     {
         var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.IdUsuario == IdUsuario)
             ?? throw new NotFoundException("Usuário não encontrado.");

@@ -5,7 +5,6 @@ using Application.Interfaces;
 using Application.Utils;
 using Domain.Exceptions.Common;
 using Domain.Interfaces.Repository;
-using Domain.ValueObject;
 
 namespace Application.Service;
 
@@ -13,12 +12,11 @@ public class LoginService(IUsuarioRepository repository) : ILoginService
 {
     private readonly IUsuarioRepository _repository = repository;
 
-    public async Task<LoginResponseDto> AutenticarAsync(LoginRequestDto Request)
+    public async Task<LoginResponseDto> AutenticarAsync(LoginRequestDto request)
     {
-        var command = LoginMapper.ToCommand(Request);
+        int idUsuario = await _repository.ObterIdUsuarioComEmailRepositoryAsync(request.Email);
+        var command = LoginMapper.ToCommand(request);
 
-        var email = new Email(command.Email);
-        int idUsuario = await _repository.ObterIdUsuarioComEmailRepositoryAsync(email);
         string senhaArmazenada = await _repository.ObterSenhaUsuarioRepositoryAsync(idUsuario);
 
         if (!Hash.VerificarSenha(command.Senha, senhaArmazenada))
@@ -27,7 +25,7 @@ public class LoginService(IUsuarioRepository repository) : ILoginService
         }
         var token = new LoginResponseDto
         {
-            Token = Token.GerarToken(idUsuario, email.EnderecoEmail)
+            Token = Token.GerarToken(idUsuario, request.Email)
         };
         return token;
     }
