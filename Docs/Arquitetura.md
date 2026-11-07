@@ -25,10 +25,10 @@ O sistema segue estritamente a **Regra de Dependência**: as dependências de c�
 
 ```mermaid
 flowchart TD
-    API["Api (Apresentação, Endpoints, DI)"]
-    PERSISTENCE["Persistence (EF Core, Repositórios)"]
+    API["Api (Apresentação, Endpoints, Middleware, DI)"]
+    PERSISTENCE["Persistence (EF Core, Repositórios, Índices)"]
     APPLICATION["Application (Casos de Uso, DTOs, Mappers, Serviços)"]
-    DOMAIN["Domain (Entidades, Value Objects, Interfaces de Repositório)"]
+    DOMAIN["Domain (Entidades Primitivas, Interfaces de Repositório, Exceções)"]
 
     API --> APPLICATION
     API --> PERSISTENCE
@@ -42,12 +42,11 @@ flowchart TD
 ## 3. Detalhamento das Camadas
 
 ### 3.1. `Domain` (Núcleo Puro)
-É o coração do sistema. Contém a lógica de negócio essencial e a representação conceitual do mundo do RPG de mesa.
+É o coração do sistema. Contém os contratos e a representação conceitual do mundo do RPG de mesa mantendo o modelo de dados o mais enxuto e primitivo possível.
 * **Responsabilidades:**
-  * **Model (`Model/`):** Entidades com identidade própria e validações de integridade (ex: `Usuario`).
-  * **Value Objects (`ValueObject/`):** Objetos de valor imutáveis que se auto-validam (ex: `Email`).
-  * **Interfaces de Repositório (`Interfaces/Repository/`):** Contratos abstratos de persistência (ex: `IUsuarioRepository`).
-  * **Exceções de Domínio (`Exceptions/` e `Exceptions/Common/`):** Erros de negócio tipados (ex: `ConflictException`, `NotFoundException`, `UnauthorizedException`, `BadRequestException`).
+  * **Model (`Model/`):** Entidades enxutas com propriedades primitivas e modificador `required` (ex: `Usuario`).
+  * **Interfaces de Repositório (`Interfaces/Repository/`):** Contratos abstratos de persistência operando com tipos primitivos (ex: `IUsuarioRepository`).
+  * **Exceções de Domínio (`Exceptions/Common/`):** Erros de negócio tipados (ex: `ConflictException`, `NotFoundException`, `UnauthorizedException`, `BadRequestException`).
 * **Regra de Ouro:** **Zero dependências externas.** Não contém referências ao EF Core, ASP.NET Core, banco de dados ou bibliotecas de terceiros.
 
 ---
@@ -56,10 +55,10 @@ flowchart TD
 Orquestra o fluxo de dados entre a camada de apresentação e o domínio.
 * **Responsabilidades:**
   * **Serviços de Aplicação (`Service/`):** Implementam os casos de uso (ex: `LoginService`, `CadastroService`).
-  * **DTOs (`Dtos/`):** Objetos de transferência de dados divididos em `Request`, `Response` e `Command`.
+  * **DTOs (`Dtos/`):** Objetos de transferência de dados imutáveis (`record` com `required` e `init`) divididos em `Request` (com validações de formato via `DataAnnotations` e `RegularExpression`), `Response` e `Command`.
   * **Mappers (`Mapper/`):** Conversores de dados dedicados (`LoginMapper`, `CadastroMapper`) para evitar repetição manual de código.
   * **Utilitários Transversais (`Utils/`):** Algoritmos utilitários puros como `Hash` (PBKDF2/SHA256) e `Token` (JWT).
-  * **Abstrações de Contexto (`Interfaces/Common/`):** Contratos como `IAspNetUser`, permitindo que os serviços conheçam o usuário logado sem acoplar com o `HttpContext`.
+  * **Abstrações de Contexto (`Interfaces/Common/`):** Contratos como `IAspNetUser`, permitindo que os serviços conheçam o usuário logado (`IdUsuario` e `EnderecoEmailUsuario` como `string?`) sem acoplar com o `HttpContext`.
 * **Regra de Dependência:** Referencia exclusivamente o `Domain`.
 
 ---
@@ -68,7 +67,7 @@ Orquestra o fluxo de dados entre a camada de apresentação e o domínio.
 Implementa o acesso e persistência física de dados utilizando o **Entity Framework Core**.
 * **Responsabilidades:**
   * **DbContext (`Context/`):** `ApplicationDbContext` gerencia a sessão com o SQL Server.
-  * **Mapeamentos Fluent API (`Configuration/`):** Classes que implementam `IEntityTypeConfiguration<T>` para configurar tabelas, índices e tipos de dados sem poluir as entidades de domínio com anotações de dados (*Data Annotations*).
+  * **Mapeamentos Fluent API (`Configuration/`):** Classes que implementam `IEntityTypeConfiguration<T>` para configurar tabelas, tamanhos de colunas e índices únicos (ex: `HasIndex(u => u.EnderecoEmailUsuario).IsUnique()`) sem poluir as entidades de domínio com anotações de dados (*Data Annotations*).
   * **Migrations (`Migrations/`):** Histórico versionado de evolução do esquema do banco de dados.
   * **Repositórios (`Repository/`):** Implementações concretas das interfaces de repositório definidas no `Domain` (ex: `UsuarioRepository`).
 * **Regra de Dependência:** Referencia `Application` e `Domain`.
@@ -78,14 +77,14 @@ Implementa o acesso e persistência física de dados utilizando o **Entity Frame
 ### 3.4. `Api` (Apresentação e Infraestrutura Web)
 Ponto de entrada de comunicação externa (HTTP REST e SignalR).
 * **Responsabilidades:**
-  * **Endpoints (`Endpoints/`):** Minimal APIs com rotas agrupadas sob o prefixo `/api` (ex: `MapLoginEndpoint`, `MapCadastroEndpoint`).
+  * **Endpoints (`Endpoints/`):** Minimal APIs com rotas agrupadas sob o prefixo `/api` (ex: `MapLoginEndpoint`, `MapCadastroEndpoint`) e validação nativa de DTOs habilitada via `.AddValidation()`.
   * **Configurações e Injeção de Dependências (`Extensions/`):**
     * `InjecaoDependencias.cs`: Registro de serviços, repositórios e `IAspNetUser`.
-    * `ConfiguracaoBanco.cs`: Configuração da Connection String e DbContext.
+    * `ConfiguracaoBanco.cs`: Configuração da Connection String via `IConfiguration` (`DefaultConnection`) e registro do `ApplicationDbContext`.
     * `AutenticacaoSeguranca.cs`: Configuração do Bearer JWT (Issuer, Audience, LifeTime, SecretKey).
     * `ConfiguracaoSwagger.cs`: Documentação OpenAPI com suporte ao botão *Authorize* para envio do token.
   * **Segurança (`Security/`):** Implementação concreta do `IAspNetUser` via `IHttpContextAccessor`.
-  * **Middlewares:** Interceptação de autenticação, autorização e tratamento de exceções.
+  * **Middleware (`Middleware/`):** `GlobalExcecaoMiddleware` para interceptação centralizada de exceções e retorno padronizado de status HTTP em JSON.
 * **Regra de Dependência:** Referencia `Application` e `Persistence`.
 
 ---

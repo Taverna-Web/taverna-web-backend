@@ -10,16 +10,15 @@ Sempre siga a ordem de dependências das camadas: de dentro para fora (`Domain` 
 
 ---
 
-### Passo 1: Camada `Domain` (Regras e Contratos)
-1. **Model ou Value Object:**
-   * Crie ou atualize as entidades em `Domain/Model/` (ex: `Ficha.cs`, `Usuario.cs`).
-   * Se houver tipos especiais com validação própria (como e-mail, pontos de vida, dados), crie em `Domain/ValueObject/`.
+### Passo 1: Camada `Domain` (Entidades e Contratos)
+1. **Model (Entidades Primitivas):**
+   * Crie ou atualize as entidades em `Domain/Model/` (ex: `Ficha.cs`, `Usuario.cs`) utilizando tipos primitivos e o modificador `required` nas propriedades obrigatórias.
 2. **Contrato do Repositório:**
    * Declare os métodos necessários na interface em `Domain/Interfaces/Repository/I{Entidade}Repository.cs`.
    * **Atenção à convenção:** Todo método assíncrono de repositório deve terminar com o sufixo **`RepositoryAsync`**.
    ```csharp
-   Task<int> ObterIdPorEmailRepositoryAsync(Email email);
-   Task AdicionarUsuarioRepositoryAsync(string nome, string senhaHash, Email email);
+   Task<int> ObterIdUsuarioComEmailRepositoryAsync(string enderecoEmail);
+   Task AdicionarUsuarioRepositoryAsync(string NomeUsuario, string Senha, string enderecoEmail);
    ```
 
 ---
@@ -45,9 +44,9 @@ Sempre siga a ordem de dependências das camadas: de dentro para fora (`Domain` 
 
 ### Passo 3: Camada `Application` (Casos de Uso e DTOs)
 1. **Criar os DTOs em `Application/Dtos/{Funcionalidade}/`:**
-   * `Request/{Acao}RequestDto.cs` (dados que chegam do cliente).
-   * `Response/{Acao}ResponseDto.cs` (dados que voltam para o cliente).
-   * `Command/{Acao}CommandDto.cs` (objeto interno validado).
+   * `Request/{Acao}RequestDto.cs` (dados que chegam do cliente, usando `required` e validações de entrada via `DataAnnotations` / `RegularExpression`).
+   * `Response/{Acao}ResponseDto.cs` (dados que voltam para o cliente com `required`).
+   * `Command/{Acao}CommandDto.cs` (objeto interno mapeado com `required`).
 2. **Criar o Mapper:**
    * Em `Application/Mapper/{Funcionalidade}/{Funcionalidade}Mapper.cs`, crie os métodos para converter `Request` em `Command` e `Entidade` em `Response`.
 3. **Interface e Classe de Serviço:**

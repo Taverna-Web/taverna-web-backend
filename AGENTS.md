@@ -52,10 +52,10 @@ O usuário frequentemente envia comandos objetivos, curtos ou de alto nível.
 Consulte esta seção para manter a consistência do código sem se perder entre sessões:
 
 ### 4.1. Camadas da Clean Architecture:
-* `Domain`: Entidades puras (`Model/`), objetos de valor (`ValueObject/`), interfaces de repositórios (`Interfaces/Repository/`), exceções de negócio (`Exceptions/` e `Exceptions/Common/`). **Zero dependência de banco de dados ou frameworks externos**.
-* `Application`: Casos de uso (`Service/`), DTOs divididos por intenção (`Dtos/{Func}/Request/`, `Response/`, `Command/`), mappers dedicados (`Mapper/{Func}/`), utilitários puros (`Utils/` com `Hash` e `Token`) e abstrações como `IAspNetUser`. Referencia apenas `Domain`.
+* `Domain`: Entidades puras com propriedades primitivas e obrigatórias (`Model/`), interfaces de repositórios (`Interfaces/Repository/`), exceções de negócio (`Exceptions/Common/`). **Zero dependência de banco de dados ou frameworks externos**.
+* `Application`: Casos de uso (`Service/`), DTOs divididos por intenção (`Dtos/{Func}/Request/`, `Response/`, `Command/`) com validações `DataAnnotations` nos Requests, mappers dedicados (`Mapper/{Func}/`), utilitários puros (`Utils/` com `Hash` e `Token`) e abstrações como `IAspNetUser`. Referencia apenas `Domain`.
 * `Persistence`: `ApplicationDbContext` (`Context/`), mapeamentos Fluent API (`Configuration/`), migrations versionadas (`Migrations/`) e implementação concreta de repositórios (`Repository/`). Referencia `Application` e `Domain`.
-* `Api`: Minimal APIs (`Endpoints/{Func}/`), extensões modulares (`Extensions/` com Swagger, Banco, Segurança, DI), segurança (`Security/AspNetUser.cs`), middlewares e SignalR hubs. Referencia `Application` e `Persistence`.
+* `Api`: Minimal APIs (`Endpoints/{Func}/`) com validação nativa (`.AddValidation()`), extensões modulares (`Extensions/` com Swagger, Banco, Segurança, DI), segurança (`Security/AspNetUser.cs`), tratamento global de erros (`Middleware/GlobalExcecaoMiddleware.cs`) e SignalR hubs. Referencia `Application` e `Persistence`.
 * `Test`: Projeto xUnit centralizado espelhando a arquitetura (`Test/Domain/`, `Test/Application/`).
 
 ### 4.2. Convenções Obrigatórias de Nomenclatura:

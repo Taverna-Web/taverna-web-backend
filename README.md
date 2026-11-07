@@ -34,26 +34,32 @@ O projeto adota uma arquitetura de **Monolito em Camadas** combinada com **Clean
 ```text
 taverna-web-backend/
 ├── Api/                         <-- Camada de Apresentação, Endpoints, SignalR Hubs e DI
+│   ├── Endpoints/               <-- Minimal APIs organizadas por funcionalidade (Login, Cadastro)
 │   ├── Extensions/              <-- Registro de dependências e configurações de ambiente
+│   ├── Middleware/              <-- Interceptação e tratamento global de exceções
 │   ├── Properties/              <-- Configurações de inicialização (launchSettings.json)
+│   ├── Security/                <-- Contexto do usuário autenticado (AspNetUser)
 │   ├── Program.cs
 │   └── Api.csproj
 │
 ├── Application/                 <-- Camada de Aplicação, Casos de Uso, DTOs e Utilitários
+│   ├── Dtos/                    <-- Contratos Request (com DataAnnotations/Regex), Response e Command
+│   ├── Interfaces/              <-- Contratos de serviços e abstrações comuns (IAspNetUser)
+│   ├── Mapper/                  <-- Conversores estáticos entre DTOs e comandos
+│   ├── Service/                 <-- Implementação dos casos de uso (LoginService, CadastroService)
 │   ├── Utils/                   <-- Utilitários transversais (Hash PBKDF2/SHA256, Token JWT)
 │   └── Application.csproj
 │
 ├── Domain/                      <-- Camada de Domínio (Núcleo Puro, sem dependências externas)
-│   ├── Exceptions/              <-- Exceções de domínio
+│   ├── Exceptions/              <-- Exceções de negócio
 │   │   └── Common/              <-- Exceções HTTP/comuns (BadRequest, Conflict, NotFound, Unauthorized)
 │   ├── Interfaces/
 │   │   └── Repository/          <-- Contratos de repositórios (ex: IUsuarioRepository)
-│   ├── Model/                   <-- Entidades de domínio (ex: Usuario)
-│   ├── ValueObject/             <-- Objetos de valor (ex: Email)
+│   ├── Model/                   <-- Entidades de domínio com tipos primitivos (ex: Usuario)
 │   └── Domain.csproj
 │
 ├── Persistence/                 <-- Camada de Persistência e Acesso a Dados (EF Core)
-│   ├── Configuration/           <-- Mapeamentos Fluent API (IEntityTypeConfiguration)
+│   ├── Configuration/           <-- Mapeamentos Fluent API e índices (IEntityTypeConfiguration)
 │   ├── Context/                 <-- Contexto do banco de dados (ApplicationDbContext)
 │   ├── Migrations/              <-- Histórico de migrações do Entity Framework Core
 │   ├── Repository/              <-- Implementação concreta dos repositórios
@@ -61,7 +67,6 @@ taverna-web-backend/
 │
 ├── Test/                        <-- Projeto centralizado de testes automatizados (xUnit)
 │   ├── Application/             <-- Testes da camada Application (Hash, Token JWT)
-│   ├── Domain/                  <-- Testes das regras de negócio e Value Objects do Domain
 │   └── Test.csproj
 │
 ├── .editorconfig                <-- Padronização de estilo e formatação de código
@@ -97,11 +102,11 @@ taverna-web-backend/
 
 ### Pilares Arquiteturais:
 - 🥞 **Clean Architecture em Camadas:** O monolito é dividido em 4 camadas principais com isolamento estrito de responsabilidades:
-  - `Api`: Ponto de entrada HTTP e WebSockets/SignalR, middlewares e composição de injeção de dependência (`Api -> Application, Persistence`).
-  - `Application`: Casos de uso, DTOs, handlers, validações e utilitários (`Application -> Domain`).
-  - `Domain`: Entidades (`Model`), objetos de valor (`ValueObject`), contratos de repositórios (`Interfaces/Repository`), exceções (`Exceptions`) e regras de negócio puras (zero dependência de banco ou frameworks externos).
-  - `Persistence`: Contexto do Entity Framework Core (`Context`), mapeamentos (`Configuration`), migrations e implementação concreta dos repositórios (`Repository`), referenciando `Application` e `Domain`.
-- 🎯 **Domain-Driven Design (DDD):** As regras de jogo e a linguagem ubíqua (Usuário, Mestre, Ficha, Iniciativa, Dados, Mapa) são isoladas no núcleo do domínio através de entidades ricas, objetos de valor e contratos bem definidos.
+  - `Api`: Ponto de entrada HTTP e WebSockets/SignalR, validação nativa de endpoints (`.AddValidation()`), middlewares (`GlobalExcecaoMiddleware`) e composição de injeção de dependência (`Api -> Application, Persistence`).
+  - `Application`: Casos de uso, DTOs tipados com `required` e `DataAnnotations`, mappers e utilitários (`Application -> Domain`).
+  - `Domain`: Entidades enxutas com tipos primitivos (`Model`), contratos de repositórios (`Interfaces/Repository`), exceções (`Exceptions/Common`) e regras de negócio puras (zero dependência de banco ou frameworks externos).
+  - `Persistence`: Contexto do Entity Framework Core (`Context`), mapeamentos e índices (`Configuration`), migrations e implementação concreta dos repositórios (`Repository`), referenciando `Application` e `Domain`.
+- 🎯 **Domain-Driven Design (DDD):** As regras de jogo e a linguagem ubíqua (Usuário, Mestre, Ficha, Iniciativa, Dados, Mapa) são isoladas por domínio com contratos bem definidos e entidades desacopladas de infraestrutura.
 - ✨ **Clean Code (Código Limpo):** Aplicação estrita dos princípios SOLID e padrões de código limpo.
 
 ---
