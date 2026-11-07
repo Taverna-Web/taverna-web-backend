@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Application.Interfaces.Common;
-using Domain.ValueObject;
 
 namespace Api.Security;
 
@@ -20,14 +19,14 @@ public class AspNetUser(IHttpContextAccessor accessor) : IAspNetUser
         }
     }
 
-    public Email? EnderecoEmailUsuario
+    public string? EnderecoEmailUsuario
     {
         get
         {
             var emailClaim = accessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
                             ?? accessor.HttpContext?.User?.FindFirst("email")?.Value;
 
-            return !string.IsNullOrWhiteSpace(emailClaim) ? new Email(emailClaim) : null;
+            return !string.IsNullOrWhiteSpace(emailClaim) ? emailClaim : null;
         }
     }
 }
