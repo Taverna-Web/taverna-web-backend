@@ -1,10 +1,10 @@
-using Api.Bootstrap;
+using DotNetEnv;
 using Api.Middleware;
 using Api.Extensions;
 using Api.Endpoints.Login;
 using Api.Endpoints.Cadastro;
 
-DotEnvExtensions.CarregarDotEnv();
+Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
