@@ -1,8 +1,11 @@
 using DotNetEnv;
 using Api.Middleware;
 using Api.Extensions;
+using Api.Endpoints.Dados;
+using Application.Interfaces;
 using Api.Endpoints.Login;
 using Api.Endpoints.Cadastro;
+using Application.Service;
 
 Env.TraversePath().Load();
 
@@ -11,8 +14,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer()
                 .AddConfiguracaoSwagger()
                 .AddConfiguracaoBanco(builder.Configuration)
-                .AddAutenticacaoSeguranca(builder.Configuration)
+                //.AddAutenticacaoSeguranca(builder.Configuration)
                 .AddInjecaoDependencias();
+
+
+builder.Services.AddScoped<IDadoService, DadoService>();
 
 var app = builder.Build();
 
@@ -25,12 +31,12 @@ if (app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 var api = app.MapGroup("/api");
-
 api.MapLoginEndpoint();
 api.MapCadastroEndpoint();
+app.MapRolarDadoEndpoint();
 
 app.Run();
