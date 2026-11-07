@@ -51,6 +51,9 @@ namespace Persistence.Migrations
 
                     b.HasKey("IdUsuario");
 
+                    b.HasIndex("EnderecoEmailUsuario")
+                        .IsUnique();
+
                     b.ToTable("Usuarios");
                 });
 #pragma warning restore 612, 618
